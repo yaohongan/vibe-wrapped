@@ -39,7 +39,14 @@ description: 生成 Vibe Check 人格报告。读取本机 Claude Code 和 Codex
 3. 写短评（你唯一需要创作的内容）
    - 读 `~/vibe-wrapped-out/persona.json`（只含聚合数字，没有原话）。
    - 写一句 ≤40 个汉字的中文毒舌短评：好笑、引用其中一个具体数字、不人身攻击、不涉及性别/外貌/地域。
-   - 用 `python3 <skill>/scripts/wrapped.py roast --text "<短评>"` 写回，不要直接改 JSON。
+   - 写回时**用 stdin + 带引号的 heredoc**，避免 shell 把 `$1,093`、反引号、引号吞掉：
+
+     ```bash
+     python3 <skill>/scripts/wrapped.py roast --stdin <<'EOF'
+     246 天烧掉 $1,093，换来 119 次打断。
+     EOF
+     ```
+   - 不要直接改 JSON。
    - 用户说不要 AI 短评时跳过，脚本会用预设短评。
 
 4. 渲染
@@ -47,8 +54,11 @@ description: 生成 Vibe Check 人格报告。读取本机 Claude Code 和 Codex
    - 生成 `poster-3x4.png`（小红书/朋友圈/X）、`poster-9x16.png`（故事/全屏）、同名 HTML，以及 `share.txt`（小红书文案、X 文案、让 AI 当面吐槽你的提示词）。
    - 只要一张图加 `--size 1080x1440` 或 `--size 1080x1920`。
 
-5. 交付
-   - 给出：时间范围、人格（含三字代号）、3 个最有梗的数字、海报路径、share.txt 里的文案。
+5. 交付（**必须直接把图显示在回复里**，不要只给文件路径）
+   - `render` 结束时会打印一段“交付块”（`![海报](绝对路径)` 加文件夹链接）。**把这段 Markdown 原样贴进你的回复**，让用户一眼就看到海报，再从链接跳转到文件夹。
+   - 如果你的界面有“向用户展示文件/图片”的工具（例如 SendUserFile），也用它把 `poster-3x4.png` 直接展示出来。
+   - 如果界面是纯终端、内嵌图片显示不出来，就改用 `render --open`（或 `all --open`），让系统看图软件打开海报。
+   - 然后给出：时间范围、人格（含三字代号）、3 个最有梗的数字、海报路径、share.txt 里的文案。
    - 提醒：海报上会出现一句脱敏后的“最暴躁原话”，项目名已匿名；用户想去掉原话就重新 render 加 `--no-quotes`。
    - 提醒：花费是按 API 标准价估算的，订阅用户实际支出不同。
    - 告诉用户还可以换时间维度，例如“生成我的 vibe 本月报告”。

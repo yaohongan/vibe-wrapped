@@ -10,6 +10,7 @@ import argparse
 import json
 import os
 import shutil
+import subprocess
 import sys
 from datetime import date, datetime, timedelta
 from typing import Optional
@@ -197,9 +198,10 @@ def cmd_roast(args) -> int:
     path = os.path.join(_out_dir(args), "persona.json")
     if not os.path.exists(path):
         sys.exit("先运行 stats。")
-    text = " ".join((args.text or "").split())
+    raw = sys.stdin.read() if args.stdin else (args.text or "")
+    text = " ".join(raw.split())
     if not text:
-        sys.exit("--text 不能为空")
+        sys.exit("短评不能为空（用 --text 或 --stdin）")
     if len(text) > 40:
         text = text[:39] + "…"
     p = _load(path)
@@ -255,7 +257,42 @@ def cmd_render(args) -> int:
         fh.write(persona_mod.share_text(m, p, REPO_URL, nickname=opts.nickname))
     for f in files + [os.path.join(out, "share.txt")]:
         print("生成：", f)
+    _print_delivery(out, files)
+    if args.open:
+        pngs = [f for f in files if f.endswith(".png")]
+        _open_path(pngs[0] if pngs else out)
     return 0
+
+
+def _md_path(path: str) -> str:
+    return f"<{path}>" if " " in path else path
+
+
+def _print_delivery(out: str, files) -> None:
+    """打印一段可原样贴进回复的 Markdown：先直接显示海报，再给文件夹链接。"""
+    import pathlib
+    out = os.path.abspath(out)
+    pngs = [os.path.abspath(f) for f in files if f.endswith(".png")]
+    print()
+    print("===== 交付块（原样贴进回复，让用户直接看到图）=====")
+    for png in pngs:
+        name = "海报 3:4（小红书/朋友圈/X）" if png.endswith("3x4.png") else "海报 9:16（故事/全屏）"
+        print(f"![{name}]({_md_path(png)})")
+    print(f"[打开海报所在文件夹]({pathlib.Path(out).as_uri()})  `{out}`")
+    print(f"[复制文案 share.txt]({pathlib.Path(os.path.join(out, 'share.txt')).as_uri()})")
+    print("===== 以上 =====")
+
+
+def _open_path(path: str) -> None:
+    try:
+        if sys.platform == "darwin":
+            subprocess.run(["open", path], check=False)
+        elif sys.platform.startswith("win"):
+            os.startfile(path)  # type: ignore[attr-defined]
+        else:
+            subprocess.run(["xdg-open", path], check=False)
+    except Exception:
+        pass
 
 
 def cmd_all(args) -> int:
@@ -288,12 +325,17 @@ def main(argv=None) -> int:
             g.add_argument("--show-quotes", action="store_true", help="关闭原话脱敏")
             g.add_argument("--no-quotes", action="store_true", help="海报不显示原话")
             sp.add_argument("--html-only", action="store_true", help="只输出 HTML，不截图")
+            sp.add_argument("--open", action="store_true",
+                            help="出图后用系统看图软件打开第一张海报（Agent 界面不能内嵌显示图片时使用）")
 
     s = sub.add_parser("doctor"); s.set_defaults(fn=cmd_doctor)
     s = sub.add_parser("scan"); s.add_argument("--tz"); s.set_defaults(fn=cmd_scan)
     s = sub.add_parser("stats"); common(s, window=True); s.set_defaults(fn=cmd_stats)
-    s = sub.add_parser("roast"); s.add_argument("--out", default=DEFAULT_OUT)
-    s.add_argument("--text", required=True); s.set_defaults(fn=cmd_roast)
+    s = sub.add_parser("roast", help="写入 AI 短评。含 $ 或引号时用 --stdin + 带引号的 heredoc")
+    s.add_argument("--out", default=DEFAULT_OUT)
+    g = s.add_mutually_exclusive_group(required=True)
+    g.add_argument("--text"); g.add_argument("--stdin", action="store_true")
+    s.set_defaults(fn=cmd_roast)
     s = sub.add_parser("render"); common(s, render_opts=True); s.set_defaults(fn=cmd_render)
     s = sub.add_parser("all"); common(s, window=True, render_opts=True); s.set_defaults(fn=cmd_all)
     s = sub.add_parser("profile", help="保存海报上的昵称（只存本机）")
