@@ -30,6 +30,7 @@ NIGHT_HOURS = range(0, 5)
 class Options:
     quotes: str = "redact"          # redact | show | none
     nickname: Optional[str] = None
+    avatar: Optional[str] = None      # 头像图片路径
     repo_url: str = "github.com/yaohongan/vibe-wrapped"
     hide_projects: bool = False
     sizes: List[str] = field(default_factory=lambda: ["1080x1440", "1080x1920"])
@@ -108,6 +109,20 @@ def _pct(x: float) -> str:
     return f"{x * 100:.0f}"
 
 
+def avatar_html(o: Options) -> str:
+    """头像：有图用图（base64 内嵌），没图但有昵称就用首字母占位圆。"""
+    if o.avatar and os.path.isfile(o.avatar):
+        ext = os.path.splitext(o.avatar)[1].lower().lstrip(".")
+        mime = {"jpg": "jpeg", "jpeg": "jpeg", "png": "png", "webp": "webp", "gif": "gif"}.get(ext)
+        if mime:
+            with open(o.avatar, "rb") as fh:
+                b64 = base64.b64encode(fh.read()).decode()
+            return f'<img class="avatar" alt="" src="data:image/{mime};base64,{b64}">'
+    if o.nickname:
+        return f'<span class="avatar ph">{e(o.nickname.strip()[:1].upper())}</span>'
+    return ""
+
+
 def heatmap_html(r: dict, window: dict) -> str:
     """年度打卡热力图：每格一天，周一在上，按周从左到右。"""
     daily = r.get("daily") or {}
@@ -119,6 +134,19 @@ def heatmap_html(r: dict, window: dict) -> str:
     end = date(sd.year, 12, 31) if sd.year == real_end.year else real_end
     if (end - sd).days > 371:
         sd = end - timedelta(days=370)
+    span_days = (real_end - sd).days + 1
+    if span_days <= 31:
+        days = [sd + timedelta(days=i) for i in range(span_days)]
+        mx = max([daily.get(d.isoformat(), 0) for d in days] + [1])
+        names = "一二三四五六日"
+        bars = []
+        for d in days:
+            v = daily.get(d.isoformat(), 0)
+            wk = " we" if d.weekday() >= 5 else ""
+            lab = names[d.weekday()] if span_days <= 7 else (str(d.day) if d.day in (1, 10, 20) or d == days[0] or d == days[-1] else "")
+            bars.append(f'<div class="db{wk}"><i style="height:{(8 + v / mx * 92) if v else 3:.0f}%" '
+                        f'class="{"on" if v else "off"}"></i><span>{lab}</span></div>')
+        return f'<div class="daybars" style="--n:{len(days)}">{"".join(bars)}</div>'
     start = sd - timedelta(days=sd.weekday())
     vals = sorted(daily.values())
     n = len(vals)
@@ -142,20 +170,28 @@ def heatmap_html(r: dict, window: dict) -> str:
             cls = f"l{level(daily.get(d.isoformat(), 0))}"
         cells.append(f'<i class="{cls}"></i>')
         d += timedelta(days=1)
-    return f'<div class="heat">{"".join(cells)}</div>'
+    weeks = (len(cells) + 6) // 7
+    return f'<div class="heat" style="--weeks:{weeks}">{"".join(cells)}</div>'
 
 
 def build_body(m: dict, p: dict, o: Options, tall: bool) -> str:
     r, t, d, s, tk = m["rhythm"], m["temper"], m["reliance"], m["spend"], m["tinker"]
     cmp_ = m.get("compare")
-    year = p.get("year") or (m["window"].get("since") or "")[:4] or ""
+    label = p.get("label") or m["window"].get("label") or ""
     plats = [PLAT.get(x, x) for x in m["platforms"]]
 
-    # 头部
-    nick = f'<div class="nick">@{e(o.nickname)}</div>' if o.nickname else ""
+    # 头部：头像 + 昵称（传播位）+ 平台
     chips = "".join(f'<span class="chip">{e(x)}</span>' for x in plats)
-    head = (f'<div class="row head"><div><div class="eyebrow">{e(year)} Vibe Coding Wrapped</div></div>'
-            f'<div class="row" style="gap:16px">{nick}<div class="chips">{chips}</div></div></div>')
+    ident = avatar_html(o)
+    eyebrow = f'VIBE CHECK · {e(label)}'
+    if ident:
+        left = (f'<div class="row id">{ident}<div class="idtext">'
+                f'<div class="nick">@{e(o.nickname)}</div>' if o.nickname else
+                f'<div class="row id">{ident}<div class="idtext">')
+        left += f'<div class="eyebrow">{eyebrow}</div></div></div>'
+    else:
+        left = f'<div><div class="eyebrow">{eyebrow}</div></div>'
+    head = f'<div class="row head">{left}<div class="chips">{chips}</div></div>'
 
     # 人格卡
     ax = p["axes"]
@@ -270,7 +306,7 @@ def build_body(m: dict, p: dict, o: Options, tall: bool) -> str:
 
     foot = (f'<div class="foot"><div class="cta"><div class="q">你是哪一型？本地生成·数据不上传，评论区交代号 👇</div>'
             f'<div class="repo">{e(o.repo_url)}</div></div>'
-            f'<div class="note">对 Claude Code / Codex 说<br>“生成我的 vibe 年报”</div></div>')
+            f'<div class="note">对 Claude Code / Codex 说<br>“生成我的 vibe 本周报告”</div></div>')
 
     parts = [head, persona_html, rhythm_html, mid_html, cmp_html, badges_html, final_html]
     parts.append(foot)
@@ -286,7 +322,7 @@ def build_html(m: dict, p: dict, o: Options, size: str) -> str:
     rep = {
         "{{theme}}": "dark" if p["dark"] else "light",
         "{{shape}}": "tall" if h > 1500 else "std",
-        "{{title}}": e(f'{p["name"]} · vibe-wrapped'),
+        "{{title}}": e(f'{p["name"]} · Vibe Check'),
         "{{fonts}}": font_face_css(),
         "{{css}}": css,
         "{{bg}}": e(p["bg"]), "{{bg2}}": e(p["bg2"]), "{{accent}}": e(p["accent"]), "{{height}}": str(h),

@@ -1,13 +1,28 @@
 ---
 name: vibe-wrapped
-description: 生成 Vibe Coding 人格年报。读取本机 Claude Code 和 Codex 会话日志，本地统计作息、脾气、依赖度、花费，判定人格类型并输出竖版分享海报和可复制文案。当用户说“vibe 年报”“wrapped”“我的 AI 编程年报”“vibe-wrapped”时使用。
+description: 生成 Vibe Check 人格报告。读取本机 Claude Code 和 Codex 会话日志，本地统计作息、脾气、依赖度、花费，判定人格并输出竖版分享海报和文案。一句话指定时间维度：本周、本月（近30天）、近三个月、近半年、今年、全部，或自定义日期；不指定默认近30天。用户说“vibe 报告”“生成我的 vibe 本周报告”“vibe check”“wrapped”“我的 AI 编程报告”时使用。
 ---
 
-# vibe-wrapped：Vibe Coding 人格年报
+# vibe-wrapped：Vibe Check 人格报告
 
-所有统计都由本目录的 Python 脚本完成，全程本地，不联网。你（Agent）只负责：运行脚本、写一句毒舌短评、把结果交给用户。不要自己数数据，不要改脚本算出来的数字。
+所有统计都由本目录的 Python 脚本完成，全程本地，不联网。你（Agent）只负责：解析用户要的时间范围、运行脚本、写一句毒舌短评、把结果交给用户。不要自己数数据，不要改脚本算出来的数字。
 
 下文 `<skill>` 指本 SKILL.md 所在目录（若无法确定，用 `~/.claude/skills/vibe-wrapped`、`~/.agents/skills/vibe-wrapped` 或 `~/.codex/skills/vibe-wrapped` 中存在的那个）。
+
+## 支持的时间维度（一句话直接说，不用再问）
+
+| 用户怎么说 | `--range` | 含义 |
+|---|---|---|
+| 本周 / 一周 / 近 7 天 | `week` | 近 7 天 |
+| 本月 / 一个月 / 近 30 天 | `month` | 近 30 天 |
+| 近三个月 / 季度 | `quarter` | 近 90 天 |
+| 近半年 / 半年 | `halfyear` | 近 180 天 |
+| 今年 / 一年 / 年度 | `year` | 今年 1/1 至今 |
+| 全部 / 有日志以来 | `all` | 全部历史 |
+| 指定日期 | `--since YYYY-MM-DD --until YYYY-MM-DD` | 自定义 |
+| 没说时间 | 不加参数（`auto`） | 近 30 天；日志不足 30 天则取全部 |
+
+**不要先反问时间。** 用户说了就按上表，没说就用默认，出完图后再告诉用户可以换成哪些维度。
 
 ## 步骤
 
@@ -16,8 +31,9 @@ description: 生成 Vibe Coding 人格年报。读取本机 Claude Code 和 Code
    - 没有渲染器时不要自己装东西，告诉用户：可以只出 HTML 自行截图（加 `--html-only`），或安装 Chrome。
 
 2. 统计
-   - 运行 `python3 <skill>/scripts/wrapped.py stats --out ~/vibe-wrapped-out`
-   - 用户指定了范围就加 `--year 2026` 或 `--since YYYY-MM-DD --until YYYY-MM-DD`，要全部历史加 `--all`；项目名和文件名默认已匿名（项目 A/B、*.tsx）；用户明确要显示真实项目名才加 `--show-projects`。
+   - 运行 `python3 <skill>/scripts/wrapped.py stats --range <key> --out ~/vibe-wrapped-out`
+   - 项目名和文件名默认已匿名（项目 A/B、*.tsx）；用户明确要显示真实项目名才加 `--show-projects`。
+   - 输出里的“时间范围”和用户消息数要转告用户；消息数 <50 时人格会标“见习”，说明样本少，可建议换更长的范围。
    - 终端提示“日志格式可能更新了”时，原样转告用户。
 
 3. 写短评（你唯一需要创作的内容）
@@ -32,11 +48,18 @@ description: 生成 Vibe Coding 人格年报。读取本机 Claude Code 和 Code
    - 只要一张图加 `--size 1080x1440` 或 `--size 1080x1920`。
 
 5. 交付
-   - 先告诉用户：海报上会出现一句脱敏后的“最暴躁原话”（项目名已默认匿名），问一次是否要去掉原话。要去掉就重新 render，加 `--no-quotes`。
-   - 然后给出：人格类型、3 个最有梗的数字、海报路径、share.txt 里的文案。
+   - 给出：时间范围、人格（含三字代号）、3 个最有梗的数字、海报路径、share.txt 里的文案。
+   - 提醒：海报上会出现一句脱敏后的“最暴躁原话”，项目名已匿名；用户想去掉原话就重新 render 加 `--no-quotes`。
    - 提醒：花费是按 API 标准价估算的，订阅用户实际支出不同。
+   - 告诉用户还可以换时间维度，例如“生成我的 vibe 本月报告”。
+
+6. 昵称和头像（传播位，只问一次）
+   - 先运行 `python3 <skill>/scripts/wrapped.py doctor`，看“海报资料”一行：已有昵称/头像就不要再问。
+   - 没有的话，出完图后问一次：“想在海报左上角加昵称和头像吗？告诉我名字，再给一张头像图片路径就行（可只给昵称）。”
+   - 用户给了就运行 `python3 <skill>/scripts/wrapped.py profile --nickname "<名字>" --avatar <图片路径>`，然后重新 render。资料只保存在本机 `~/.vibe-wrapped/`，之后每次自动使用。
+   - 用户说不要，就不再问；要清除用 `profile --clear`。
 
 ## 禁止事项
-- 不要把日志内容、原话、路径发到任何网络服务。
+- 不要把日志内容、原话、路径、头像发到任何网络服务。
 - 不要读取认证文件（`auth.json`、`.credentials.json` 等），脚本也不会读。
 - 不要编造脚本没有给出的数字。

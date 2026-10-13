@@ -1,4 +1,4 @@
-# vibe-wrapped · Vibe Coding 人格年报
+# vibe-wrapped · Vibe Check：你和 AI 写代码的人格报告
 
 > 程序员版 Spotify Wrapped。读你本机的 **Claude Code** 和 **Codex** 会话日志，算出你这一年怎么跟 AI 写代码，给你一个人格类型和一张能直接发的海报。
 > Local-only Spotify-Wrapped for vibe coders. Reads your Claude Code + Codex logs, gives you a persona and a shareable poster. Nothing leaves your machine.
@@ -17,10 +17,22 @@
 
 | 平台 | 怎么触发 |
 |---|---|
-| Claude Code | 直接说 **“生成我的 vibe 年报”**（或 `/vibe-wrapped`） |
-| Codex | 输入 **`$vibe-wrapped`**，或说“生成我的 vibe 年报” |
+| Claude Code | 直接说 **“生成我的 vibe 本周报告”**（或 `/vibe-wrapped`） |
+| Codex | 输入 **`$vibe-wrapped`**，或说“生成我的 vibe 本周报告” |
 
-3 分钟内得到海报 PNG + 可复制的小红书 / X 文案。全程本地，不联网，不上传。
+**一句话指定时间维度**，想看哪段就说哪段：
+
+| 你说 | 范围 |
+|---|---|
+| 生成我的 vibe **本周**报告 | 近 7 天 |
+| 生成我的 vibe **本月**报告 | 近 30 天（不说时间默认就是它，日志不足 30 天则取全部） |
+| 生成我的 vibe **近三个月**报告 | 近 90 天 |
+| 生成我的 vibe **近半年**报告 | 近 180 天 |
+| 生成我的 vibe **今年**报告 | 今年 1/1 至今 |
+| 生成我的 vibe **全部**报告 | 有日志以来 |
+| …**从 3 月 1 日到 3 月 31 日** | 自定义日期 |
+
+3 分钟内得到海报 PNG + 可复制的小红书 / X 文案。全程本地，不联网，不上传。第一次出图后 Agent 会问你一次**昵称和头像**，之后自动出现在海报左上角。
 
 <details>
 <summary>给 Agent 的安装指引（人类可跳过）</summary>
@@ -60,12 +72,13 @@
 ## 常用参数
 
 ```
---year 2026 | --since 2026-01-01 --until 2026-12-31 | --all
+--range week|month|quarter|halfyear|year|all   （默认 auto：近 30 天，不足则全部；也认 本周/本月/半年/今年/全部）
+--since 2026-03-01 --until 2026-03-31 | --year 2025
 --tz Asia/Shanghai          时区（默认系统时区）
 --platform claude_code|codex
 --show-projects             显示真实项目名/文件名（默认匿名：项目 A/B/C，*.tsx）
 --no-quotes | --show-quotes 原话：不显示 / 关闭脱敏（默认脱敏）
---nickname NAME             海报右上角昵称
+--nickname NAME --avatar PATH    海报左上角昵称/头像（或先 `wrapped.py profile` 保存，之后自动使用）
 --size 1080x1440|1080x1920
 --html-only                 只输出 HTML
 ```

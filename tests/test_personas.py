@@ -76,10 +76,15 @@ class HeatmapAndCode(unittest.TestCase):
         from datetime import date
         r = {"daily": {"2026-01-01": 1, "2026-01-02": 5, "2026-01-05": 20},
              "first_day": "2026-01-01", "last_day": "2026-01-05"}
-        h = R.heatmap_html(r, {"since": "2026-01-01", "until": "2026-01-10"})
+        h = R.heatmap_html(r, {"since": "2026-01-01", "until": "2026-03-31"})
         self.assertIn('class="heat"', h)
         self.assertEqual(h.count('class="l4"'), 1)                 # 只有最大那天是最深一档
-        self.assertGreaterEqual(h.count("<i "), 365)               # 整年网格
+        self.assertGreaterEqual(h.count("<i "), 90)
+        # ≤31 天的窗口改画“每日柱”，周窗口带星期标签
+        w = R.heatmap_html(r, {"since": "2026-01-01", "until": "2026-01-07"})
+        self.assertIn("daybars", w)
+        self.assertEqual(w.count('class="db'), 7)
+        self.assertIn("<span>四</span>", w)                        # 2026-01-01 是周四
         m = metrics.compute(synth(1, 1, 1), tz=TZ)
         self.assertEqual(persona.build(m, 2026)["code"], "夜爆放")
         self.assertIn("杯奶茶", persona.share_text(

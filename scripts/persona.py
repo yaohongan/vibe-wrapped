@@ -169,7 +169,7 @@ def fmt_money(x: float) -> str:
     return f"${x:,.0f}" if x >= 100 else f"${x:,.2f}"
 
 
-def build(m: dict, year: Optional[int] = None) -> dict:
+def build(m: dict, year: Optional[int] = None, label: Optional[str] = None) -> dict:
     ax = axes(m)
     key = (ax["N"] >= N_HIGH, ax["G"] >= G_HIGH, ax["L"] >= L_HIGH)
     p = PERSONAS[key]
@@ -199,6 +199,7 @@ def build(m: dict, year: Optional[int] = None) -> dict:
         "roast": None,
         "roast_fallback": fallback,
         "year": year,
+        "label": label or (f"{year} 年" if year else "全部时间"),
         "numbers": {   # 给 AI 写短评用：只含聚合数字，不含原话/路径/项目名
             "user_msgs": n_user,
             "night_ratio_pct": round(r["night_ratio"] * 100, 1),
@@ -232,14 +233,15 @@ def hash_pick(n: int, k: int) -> int:
 PLAT_NAME = {"claude_code": "Claude Code", "codex": "Codex"}
 
 
-def share_text(m: dict, persona: dict, repo_url: str) -> str:
+def share_text(m: dict, persona: dict, repo_url: str, nickname: Optional[str] = None) -> str:
     r, t, d, s, tk = m["rhythm"], m["temper"], m["reliance"], m["spend"], m["tinker"]
-    year = persona.get("year") or ""
+    label = persona.get("label") or ""
+    who = f"@{nickname} 的" if nickname else "我的"
     plats = " + ".join(PLAT_NAME.get(p, p) for p in m["platforms"]) or "AI"
     lt = r.get("latest")
     roast = persona.get("roast") or persona["roast_fallback"]
     lines_zh = [
-        f"我的 {year} Vibe Coding 人格：【{persona['code']}｜{persona['name']}】",
+        f"{who}「{label}」Vibe Check：【{persona['code']}｜{persona['name']}】",
         f"“{persona['tagline']}”",
         "",
         f"· 和 {plats} 聊了 {m['user_msgs']:,} 句，活跃 {r['active_days']} 天，连续最长 {r['longest_streak']} 天",
@@ -255,7 +257,7 @@ def share_text(m: dict, persona: dict, repo_url: str) -> str:
         f"AI 点评：{roast}",
         "",
         "你是哪一型？评论区交出你的三字代号（夜/昼 · 爆/温 · 放/控）👇",
-        "本地生成，数据不上传，对 Claude Code / Codex 说一句“生成我的 vibe 年报”就行：",
+        "本地生成，数据不上传，对 Claude Code / Codex 说一句“生成我的 vibe 本周报告”就行：",
         repo_url,
         "",
         "#VibeCoding #ClaudeCode #Codex #AI编程 #程序员 #年度报告",
@@ -265,7 +267,7 @@ def share_text(m: dict, persona: dict, repo_url: str) -> str:
         lines_zh.insert(len(lines_zh) - 7, f"· 解锁徽章：{badge_line}")
 
     lines_x = [
-        f"My {year} vibe coding persona: 【{persona['code']}】{persona['name']}",
+        f"My vibe check ({label}): 【{persona['code']}】{persona['name']}",
         f"{m['user_msgs']:,} prompts · {r['active_days']} active days · "
         f"{r['night_ratio'] * 100:.0f}% after midnight · {t['angry_rate'] * 100:.0f}% swearing rate",
     ]
