@@ -14,11 +14,10 @@ html,body{width:1080px;background:var(--bg)}
 body{font-family:var(--font);color:var(--fg);-webkit-font-smoothing:antialiased}
 .poster{
   position:relative;width:1080px;height:var(--h,1440px);overflow:hidden;
-  padding:34px 56px 28px;display:flex;flex-direction:column;gap:10px;justify-content:space-between;
+  padding:30px 56px 24px;display:flex;flex-direction:column;gap:8px;justify-content:space-between;
   background:
-    radial-gradient(900px 520px at 100% -8%, color-mix(in srgb,var(--accent) 38%,transparent), transparent 70%),
-    radial-gradient(700px 480px at -10% 108%, color-mix(in srgb,var(--accent) 22%,transparent), transparent 70%),
-    var(--bg);
+    radial-gradient(760px 520px at 100% 0%, color-mix(in srgb,var(--accent) 30%,transparent), transparent 70%),
+    linear-gradient(165deg, var(--bg) 0%, var(--bg2) 100%);
 }
 .tall .poster{gap:18px;padding-top:70px;padding-bottom:56px;justify-content:space-between}
 .tall .panel{padding:20px 28px}
@@ -105,3 +104,37 @@ body{font-family:var(--font);color:var(--fg);-webkit-font-smoothing:antialiased}
 .foot .repo{font-family:var(--mono);font-size:24px;font-weight:700}
 .foot .note{font-size:18px;color:var(--fg3);text-align:right;line-height:1.45}
 .warn{font-size:20px;color:var(--fg3)}
+
+/* ── 打卡感：代号 / 印章 / 角标 / 热力图 ── */
+.persona{position:relative}
+.kicker{display:flex;align-items:center;gap:12px}
+.code{display:inline-flex;gap:6px}
+.code span{width:46px;height:46px;border-radius:12px;background:var(--accent);color:#fff;font-weight:900;font-size:30px;
+  display:inline-flex;align-items:center;justify-content:center}
+.glyph{position:absolute;right:210px;top:6px;font-size:170px;line-height:1;opacity:.2;pointer-events:none;filter:saturate(1.2)}
+.stamp{position:absolute;right:6px;top:2px;width:150px;height:150px;border-radius:50%;
+  border:5px double var(--accent);color:var(--accent);transform:rotate(-13deg);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.05;background:color-mix(in srgb,var(--bg) 55%,transparent)}
+.stamp span{font-size:22px;font-weight:700;letter-spacing:.12em}
+.stamp b{font-family:var(--mono);font-size:56px;font-weight:800}
+.heat{display:grid;grid-template-rows:repeat(7,12px);grid-auto-flow:column;grid-auto-columns:12px;gap:3px;margin-top:10px;justify-content:space-between}
+.heat i,.legend i{display:inline-block;width:12px;height:12px;vertical-align:-1px;border-radius:3px;background:var(--line)}
+.heat i.x{background:transparent}
+.heat i.f{background:transparent;border:1px dashed var(--line)}
+.heat i.l1,.legend i.l1{background:color-mix(in srgb,var(--accent) 30%,transparent)}
+.heat i.l2,.legend i.l2{background:color-mix(in srgb,var(--accent) 55%,transparent)}
+.heat i.l3,.legend i.l3{background:color-mix(in srgb,var(--accent) 78%,transparent)}
+.heat i.l4,.legend i.l4{background:var(--accent)}
+.heat-legend{display:flex;justify-content:space-between;align-items:center;font-size:18px;color:var(--fg3);margin-top:8px}
+.heat-legend span{display:inline-flex;align-items:center;gap:4px}
+.stat .lbl.tea{font-size:24px;color:var(--fg);font-weight:700}
+.foot .cta .q{font-size:22px;color:var(--fg2);margin-bottom:4px}
+.foot .note{font-size:18px}
+.tall .glyph{font-size:190px;right:230px}
+.tall .stamp{width:180px;height:180px}
+.tall .stamp b{font-size:68px}
+.tall .heat{grid-template-rows:repeat(7,14px);grid-auto-columns:14px}
+.tall .heat i,.tall .legend i{width:14px;height:14px}
+.h3row{display:flex;justify-content:space-between;align-items:center}
+.h3row .legend{font-size:18px;font-weight:400;letter-spacing:0;color:var(--fg3)}
+.share{margin:6px 0 6px}

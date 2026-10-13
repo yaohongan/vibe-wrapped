@@ -168,6 +168,7 @@ def compute(events: List, tz: Optional[tzinfo] = None,
         "active_days": len(per_day),
         "longest_streak": _longest_streak(per_day.keys()),
         "hours": hours,
+        "daily": {d.isoformat(): n for d, n in sorted(per_day.items())},
         "first_day": first_day.isoformat() if first_day else None,
         "last_day": last_day.isoformat() if last_day else None,
     }

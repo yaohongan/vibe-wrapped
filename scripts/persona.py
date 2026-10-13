@@ -18,56 +18,56 @@ PERSONAS = {
     (True, True, True): {
         "id": "night-angry-hands-off", "name": "深夜甩锅型",
         "tagline": "半夜三点丢一句“修好它”，修不好就骂",
-        "bg": "#1B1035", "accent": "#FF3D7F", "dark": True,
+        "bg": "#170B33", "bg2": "#4A0F3D", "accent": "#FF3D7F", "glyph": "🌙", "dark": True,
         "roasts": ["你不是在写代码，你是在凌晨给 AI 派活然后骂它。",
                    "{latest}还在发指令，AI 没睡，你的黑眼圈替它加班。",
                    "{angry}% 的消息在骂人，剩下的在说“继续”。"]},
     (True, True, False): {
         "id": "night-angry-control", "name": "熬夜暴躁监工",
         "tagline": "一行行盯着改，越晚越凶",
-        "bg": "#0D0D0D", "accent": "#FF5A1F", "dark": True,
+        "bg": "#0B0B0B", "bg2": "#3A1204", "accent": "#FF5A1F", "glyph": "🔦", "dark": True,
         "roasts": ["凌晨 4 点的“不对”，AI 记住了，你女朋友也记住了。",
                    "{night}% 的消息在凌晨发出，你是 AI 唯一的夜班领导。",
                    "盯得这么紧，{angry}% 的暴躁率，AI 比你的甲方还难。"]},
     (True, False, True): {
         "id": "night-calm-hands-off", "name": "午夜甩手掌柜",
         "tagline": "睡前说一句“继续”，第二天看结果",
-        "bg": "#141E46", "accent": "#7AA2FF", "dark": True,
+        "bg": "#0E1740", "bg2": "#1B3A8A", "accent": "#8FB4FF", "glyph": "😴", "dark": True,
         "roasts": ["你的作息只有 AI 知道，它也不敢说。",
                    "短指令占 {short}%：你对 AI 说得最多的是“继续”。",
                    "凌晨发一句“继续”，早上收货，AI 才是夜班工人。"]},
     (True, False, False): {
         "id": "night-calm-control", "name": "深夜温柔调教型",
         "tagline": "凌晨还在耐心解释第五遍",
-        "bg": "#1F1B3A", "accent": "#C9A7FF", "dark": True,
+        "bg": "#1B1638", "bg2": "#3B2A66", "accent": "#C9A7FF", "glyph": "🕯️", "dark": True,
         "roasts": ["这么好的耐心，建议分一点给现实里的人。",
                    "骂人率只有 {angry}%，你是凌晨最温柔的 AI 家长。",
                    "{night}% 的话在深夜说完，AI 比你的朋友更懂你的作息。"]},
     (False, True, True): {
         "id": "day-angry-hands-off", "name": "白天甩锅型",
         "tagline": "上班时间外包给 AI，出事全怪它",
-        "bg": "#FFF4E6", "accent": "#E8590C", "dark": False,
+        "bg": "#FFE8CC", "bg2": "#FFC078", "accent": "#D9480F", "glyph": "💥", "dark": False,
         "roasts": ["需求一句话，骂人一段话。",
                    "{angry}% 的消息带火药味，短指令还占 {short}%，典型“你看着办但你办错了”。",
                    "活让 AI 干，气自己生，这是什么新型劳动关系。"]},
     (False, True, False): {
         "id": "day-angry-control", "name": "暴躁监工型",
         "tagline": "朝九晚六，盯得死死的，错一个字都不行",
-        "bg": "#FFF0F0", "accent": "#D6336C", "dark": False,
+        "bg": "#FFE0E0", "bg2": "#FFA8A8", "accent": "#C2255C", "glyph": "👀", "dark": False,
         "roasts": ["你不需要 AI，你需要一个能骂的实习生。",
                    "{angry}% 的暴躁率，且作息正常，纯粹是脾气不好。",
                    "朝九晚六骂得有条不紊，AI 都想申请工伤。"]},
     (False, False, True): {
         "id": "day-calm-hands-off", "name": "甩手掌柜型",
         "tagline": "“你看着办”，然后真让它看着办",
-        "bg": "#EAF7EE", "accent": "#2B8A3E", "dark": False,
+        "bg": "#DFF5E3", "bg2": "#A9E3B8", "accent": "#2B8A3E", "glyph": "🍵", "dark": False,
         "roasts": ["代码是 AI 写的，PR 是你提的，锅是谁的心里有数。",
                    "短指令占 {short}%，你的主要贡献是说“继续”。",
                    "AI 干了 {msgs} 轮活，你负责点头，职场天赋拉满。"]},
     (False, False, False): {
         "id": "day-calm-control", "name": "温柔调教型",
         "tagline": "正常作息、说话客气、事事过问",
-        "bg": "#F3F0FF", "accent": "#5F3DC4", "dark": False,
+        "bg": "#EBE4FF", "bg2": "#CDBDFF", "accent": "#5F3DC4", "glyph": "🌱", "dark": False,
         "roasts": ["你是 AI 最想要的用户，也是最无聊的那种。",
                    "{angry}% 的暴躁率，你是怎么做到和 AI 不吵架的？",
                    "作息健康、脾气稳定、事事过问，建议去带新人。"]},
@@ -157,6 +157,14 @@ def fmt_tokens(n: float) -> str:
     return f"{int(n)}"
 
 
+USD_CNY = 7.1          # 仅用于“折合奶茶”的趣味换算
+TEA_CNY = 15           # 一杯奶茶
+
+
+def tea_cups(cost_usd: float) -> int:
+    return int(round(cost_usd * USD_CNY / TEA_CNY))
+
+
 def fmt_money(x: float) -> str:
     return f"${x:,.0f}" if x >= 100 else f"${x:,.2f}"
 
@@ -181,7 +189,8 @@ def build(m: dict, year: Optional[int] = None) -> dict:
         "id": p["id"],
         "name": p["name"] + ("（见习）" if rookie else ""),
         "tagline": p["tagline"],
-        "bg": p["bg"], "accent": p["accent"], "dark": p["dark"],
+        "code": ("夜" if key[0] else "昼") + ("爆" if key[1] else "温") + ("放" if key[2] else "控"),
+        "bg": p["bg"], "bg2": p["bg2"], "accent": p["accent"], "glyph": p["glyph"], "dark": p["dark"],
         "rookie": rookie,
         "axes": ax,
         "axis_flags": {"night": key[0], "angry": key[1], "hands_off": key[2]},
@@ -230,7 +239,7 @@ def share_text(m: dict, persona: dict, repo_url: str) -> str:
     lt = r.get("latest")
     roast = persona.get("roast") or persona["roast_fallback"]
     lines_zh = [
-        f"我的 {year} Vibe Coding 人格：【{persona['name']}】",
+        f"我的 {year} Vibe Coding 人格：【{persona['code']}｜{persona['name']}】",
         f"“{persona['tagline']}”",
         "",
         f"· 和 {plats} 聊了 {m['user_msgs']:,} 句，活跃 {r['active_days']} 天，连续最长 {r['longest_streak']} 天",
@@ -239,13 +248,14 @@ def share_text(m: dict, persona: dict, repo_url: str) -> str:
         lines_zh.append(f"· 最晚一次 {lt['time']} 还在发指令，凌晨占比 {r['night_ratio'] * 100:.0f}%")
     lines_zh.append(f"· 骂 AI 命中率 {t['angry_rate'] * 100:.0f}%，打断它 {t['interrupts']} 次")
     if s["has_usage"]:
-        lines_zh.append(f"· 烧掉 {fmt_tokens(s['total_tokens'])} token，约 {fmt_money(s['cost'])}（API 价估算）")
+        lines_zh.append(f"· 烧掉 {fmt_tokens(s['total_tokens'])} token，约 {fmt_money(s['cost'])}（API 价估算），折合 {tea_cups(s['cost']):,} 杯奶茶")
     lines_zh += [
         f"· 和 AI 的关系：{persona['diagnosis']['name']}——{persona['diagnosis']['desc']}",
         "",
         f"AI 点评：{roast}",
         "",
-        "你是哪一型？本地生成，数据不上传，3 分钟出图 👇",
+        "你是哪一型？评论区交出你的三字代号（夜/昼 · 爆/温 · 放/控）👇",
+        "本地生成，数据不上传，对 Claude Code / Codex 说一句“生成我的 vibe 年报”就行：",
         repo_url,
         "",
         "#VibeCoding #ClaudeCode #Codex #AI编程 #程序员 #年度报告",
@@ -255,7 +265,7 @@ def share_text(m: dict, persona: dict, repo_url: str) -> str:
         lines_zh.insert(len(lines_zh) - 7, f"· 解锁徽章：{badge_line}")
 
     lines_x = [
-        f"My {year} vibe coding persona: 【{persona['name']}】",
+        f"My {year} vibe coding persona: 【{persona['code']}】{persona['name']}",
         f"{m['user_msgs']:,} prompts · {r['active_days']} active days · "
         f"{r['night_ratio'] * 100:.0f}% after midnight · {t['angry_rate'] * 100:.0f}% swearing rate",
     ]

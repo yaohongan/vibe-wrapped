@@ -5,7 +5,45 @@
 
 <p align="center"><img src="docs/example-poster.png" width="420" alt="示例海报（合成数据）"></p>
 
+## 安装（30 秒）
+
+**把下面这句话原样发给 Claude Code 或 Codex，它会自己装好：**
+
+```
+帮我安装这个 skill：https://github.com/yaohongan/vibe-wrapped
+```
+
+装完**重启**，然后：
+
+| 平台 | 怎么触发 |
+|---|---|
+| Claude Code | 直接说 **“生成我的 vibe 年报”**（或 `/vibe-wrapped`） |
+| Codex | 输入 **`$vibe-wrapped`**，或说“生成我的 vibe 年报” |
+
+3 分钟内得到海报 PNG + 可复制的小红书 / X 文案。全程本地，不联网，不上传。
+
+<details>
+<summary>给 Agent 的安装指引（人类可跳过）</summary>
+
+1. 克隆并运行安装脚本（脚本用**复制**，Codex 会跳过软链）：
+
+   ```bash
+   git clone --depth 1 https://github.com/yaohongan/vibe-wrapped /tmp/vibe-wrapped && bash /tmp/vibe-wrapped/install.sh
+   ```
+
+   它会复制到 `~/.claude/skills/vibe-wrapped`、`~/.agents/skills/vibe-wrapped`、`~/.codex/skills/vibe-wrapped`。只装一个平台用 `bash install.sh --claude` 或 `--codex`。
+2. 没有 bash / Windows：把仓库里的 `SKILL.md`、`scripts/`、`templates/`、`data/` 复制到上述任一目录下的 `vibe-wrapped/` 即可。
+3. 验证：`python3 ~/.claude/skills/vibe-wrapped/scripts/wrapped.py doctor`（需要 Python ≥3.9，只用标准库；渲染用本机 Chrome/Edge）。
+4. 告诉用户**重启** Claude Code / Codex，并说出上面的触发方式。
+5. 旧版 Codex 看不到 skill 时，在 `~/.codex/config.toml` 加 `[features] skills = true`。
+
+</details>
+
+不装 Skill 也能直接跑：`python3 scripts/wrapped.py all`（使用预设短评）。
+
 ## 你会得到什么
+
+<p align="center"><img src="docs/example-poster.png" width="420" alt="示例海报（合成数据）"></p>
 
 | 文件 | 用途 |
 |---|---|
@@ -15,28 +53,9 @@
 | `share.txt` | 可复制的小红书文案、X 文案、**让你的 AI 当面吐槽你的提示词** |
 | `metrics.json` / `persona.json` | 全部数字与来源，海报上每个数字都能在这里查到 |
 
-8 种人格（夜猫 × 脾气 × 放手）：深夜甩锅型、熬夜暴躁监工、午夜甩手掌柜、深夜温柔调教型、白天甩锅型、暴躁监工型、甩手掌柜型、温柔调教型；外加和 AI 的“关系诊断”与成就徽章。
+**海报里有什么**：三字人格代号（夜/昼 · 爆/温 · 放/控，像 MBTI 一样好交代）、“已打卡 N 天”印章、全年打卡热力图、最晚一次还在发指令的时间、暴躁命中率与最凶的一句（已脱敏）、折合多少杯奶茶、成就徽章、和 AI 的“关系诊断”，以及一句毒舌短评。8 种人格各有自己的主题色和角标。
 
-## 安装
-
-```bash
-git clone https://github.com/yaohongan/vibe-wrapped
-cd vibe-wrapped && bash install.sh       # 装到所有平台
-bash install.sh --claude | --codex       # 只装一个
-```
-
-安装用**复制**（Codex 会跳过软链）：`~/.claude/skills/`、`~/.agents/skills/`、`~/.codex/skills/`。装完重启。
-
-- Claude Code：直接说“生成我的 vibe 年报”
-- Codex：`/skills` 或 `$vibe-wrapped`
-- 旧版 Codex 看不到 skill：在 `~/.codex/config.toml` 加 `[features] skills = true`
-
-不装 Skill 也能用：
-
-```bash
-python3 scripts/wrapped.py all            # 统计 + 出图（使用预设短评）
-python3 scripts/wrapped.py doctor         # 检查环境
-```
+8 种人格：深夜甩锅型、熬夜暴躁监工、午夜甩手掌柜、深夜温柔调教型、白天甩锅型、暴躁监工型、甩手掌柜型、温柔调教型。
 
 ## 常用参数
 

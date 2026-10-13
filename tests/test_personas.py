@@ -68,3 +68,23 @@ class EightPersonas(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class HeatmapAndCode(unittest.TestCase):
+    def test_heatmap_cells_and_code(self):
+        import render as R
+        from datetime import date
+        r = {"daily": {"2026-01-01": 1, "2026-01-02": 5, "2026-01-05": 20},
+             "first_day": "2026-01-01", "last_day": "2026-01-05"}
+        h = R.heatmap_html(r, {"since": "2026-01-01", "until": "2026-01-10"})
+        self.assertIn('class="heat"', h)
+        self.assertEqual(h.count('class="l4"'), 1)                 # 只有最大那天是最深一档
+        self.assertGreaterEqual(h.count("<i "), 365)               # 整年网格
+        m = metrics.compute(synth(1, 1, 1), tz=TZ)
+        self.assertEqual(persona.build(m, 2026)["code"], "夜爆放")
+        self.assertIn("杯奶茶", persona.share_text(
+            dict(m, spend={"has_usage": True, "total_tokens": 10 ** 8, "cost": 150.0,
+                           "models": [], "approx": False, "output_tokens": 0,
+                           "unpriced_share": 0, "top_model": None, "per_platform": {},
+                           "platforms_without_usage": []}),
+            persona.build(m, 2026), "github.com/x/y"))

@@ -12,6 +12,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+from datetime import date, timedelta
 from dataclasses import dataclass, field
 from typing import List, Optional
 
@@ -107,6 +108,39 @@ def _pct(x: float) -> str:
     return f"{x * 100:.0f}"
 
 
+def heatmap_html(r: dict, window: dict) -> str:
+    """年度打卡热力图：每格一天，周一在上，按周从左到右。"""
+    daily = r.get("daily") or {}
+    since = window.get("since") or r.get("first_day")
+    until = window.get("until") or r.get("last_day")
+    if not since or not until:
+        return ""
+    sd, real_end = date.fromisoformat(since), date.fromisoformat(until)
+    end = date(sd.year, 12, 31) if sd.year == real_end.year else real_end
+    if (end - sd).days > 371:
+        sd = end - timedelta(days=370)
+    start = sd - timedelta(days=sd.weekday())
+    vals = sorted(daily.values())
+    th = [vals[len(vals) * k // 4] for k in (1, 2, 3)] if vals else [0, 0, 0]
+
+    def level(v: int) -> int:
+        if v <= 0:
+            return 0
+        return 1 if v <= th[0] else 2 if v <= th[1] else 3 if v <= th[2] else 4
+
+    cells, d = [], start
+    while d <= end:
+        if d < sd:
+            cls = "x"
+        elif d > real_end:
+            cls = "f"
+        else:
+            cls = f"l{level(daily.get(d.isoformat(), 0))}"
+        cells.append(f'<i class="{cls}"></i>')
+        d += timedelta(days=1)
+    return f'<div class="heat">{"".join(cells)}</div>'
+
+
 def build_body(m: dict, p: dict, o: Options, tall: bool) -> str:
     r, t, d, s, tk = m["rhythm"], m["temper"], m["reliance"], m["spend"], m["tinker"]
     cmp_ = m.get("compare")
@@ -132,26 +166,31 @@ def build_body(m: dict, p: dict, o: Options, tall: bool) -> str:
                  + axis("脾气值", ax["G"], "爆" if fl["angry"] else "温", persona_mod.G_HIGH)
                  + axis("放手值", ax["L"], "放" if fl["hands_off"] else "控", persona_mod.L_HIGH))
     note = f'<div class="warn">{e(p["sample_note"])}</div>' if p.get("sample_note") else ""
-    persona_html = (f'<div class="persona"><div class="kicker">你的 AI 编程人格是</div>'
+    code = "".join(f"<span>{e(c)}</span>" for c in p.get("code", ""))
+    persona_html = (f'<div class="persona"><div class="glyph">{e(p.get("glyph", ""))}</div>'
+                    f'<div class="stamp"><span>已打卡</span><b>{r["active_days"]}</b><span>天</span></div>'
+                    f'<div class="kicker"><span class="code">{code}</span>你的 AI 编程人格是</div>'
                     f'<h1 data-fit>{e(p["name"])}</h1>'
                     f'<div class="tag">{e(p["tagline"])}</div>'
                     f'<div class="axes">{axes_html}</div>{note}</div>')
 
-    # 作息
+    # 作息 + 年度打卡
     lt = r.get("latest")
-    mx = max(r["hours"]) or 1
-    bars = "".join(
-        f'<span class="{"n" if h in NIGHT_HOURS else ""}" style="height:{max(4, r["hours"][h] / mx * 100):.0f}%"></span>'
-        for h in range(24))
+    bd = r.get("busiest_day")
+    bd_txt = ""
+    if bd:
+        dd = date.fromisoformat(bd["date"])
+        bd_txt = f' · 最肝 <b>{dd.month}/{dd.day}</b> 一天 <b>{bd["count"]}</b> 句'
+    since = m["window"].get("since") or r.get("first_day")
+    until = m["window"].get("until") or r.get("last_day")
+    span = ((date.fromisoformat(until) - date.fromisoformat(since)).days + 1) if since and until else 0
     rhythm_html = (
-        '<div class="panel"><h3>作息 · 最晚一次还在发指令</h3><div class="rhythm">'
+        '<div class="panel"><h3 class="h3row"><span>打卡 · 最晚一次还在发指令</span><span class="legend">每格一天　少 <i class="l1"></i><i class="l2"></i><i class="l3"></i><i class="l4"></i> 多</span></h3><div class="rhythm">'
         f'<div><div class="big">{e(lt["time"]) if lt else "--:--"}</div></div>'
         f'<div><div class="sub">凌晨 0–5 点占 <b>{_pct(r["night_ratio"])}%</b> · 周末占 <b>{_pct(r["weekend_ratio"])}%</b><br>'
-        f'活跃 <b>{r["active_days"]}</b> 天 · 最长连续 <b>{r["longest_streak"]}</b> 天'
-        + (f' · 最肝一天 <b>{r["busiest_day"]["count"]}</b> 句' if r.get("busiest_day") else "")
-        + f'</div></div></div>'
-        f'<div class="hours" style="margin-top:14px">{bars}</div>'
-        '<div class="hours-axis"><span>0时</span><span>6</span><span>12</span><span>18</span><span>23</span></div></div>')
+        f'打卡 <b>{r["active_days"]}</b>{f" / {span}" if span else ""} 天 · 最长连续 <b>{r["longest_streak"]}</b> 天{bd_txt}'
+        '</div></div></div>'
+        + heatmap_html(r, m["window"]) + '</div>')
 
     # 脾气
     q = t.get("quote")
@@ -171,7 +210,8 @@ def build_body(m: dict, p: dict, o: Options, tall: bool) -> str:
         approx = "约 " if s["approx"] else ""
         cost = f'{approx}{persona_mod.fmt_money(s["cost"])}'
         cost_cell = (f'<div class="stat"><div class="big">{e(cost)}</div>'
-                     f'<div class="lbl">{e(persona_mod.fmt_tokens(s["total_tokens"]))} token · API 价估算（订阅实际不同）</div></div>')
+                     f'<div class="lbl tea">🧋 折合约 {persona_mod.tea_cups(s["cost"]):,} 杯奶茶</div>'
+                     f'<div class="lbl">{e(persona_mod.fmt_tokens(s["total_tokens"]))} token · API 价估算，订阅不同</div></div>')
         miss = ""
         if s["platforms_without_usage"]:
             names = "、".join(PLAT.get(x, x) for x in s["platforms_without_usage"])
@@ -205,7 +245,7 @@ def build_body(m: dict, p: dict, o: Options, tall: bool) -> str:
         sa, sb = cmp_["message_share"][a], cmp_["message_share"][b]
         ra, rb = cmp_["angry_rate"][a], cmp_["angry_rate"][b]
         cmp_html = (
-            f'<div class="panel"><h3>双平台 · {e(cmp_["mode"])}</h3>'
+            f'<div class="panel"><h3 class="h3row"><span>双平台 · {e(cmp_["mode"])}</span></h3>'
             f'<div class="share"><i class="a" style="width:{sa * 100:.1f}%"></i><i class="b" style="width:{sb * 100:.1f}%"></i></div>'
             f'<div class="cmp-line">{e(PLAT.get(a, a))} <b>{_pct(sa)}%</b> · {e(PLAT.get(b, b))} <b>{_pct(sb)}%</b>　'
             f'挨骂 <b>{_pct(ra)}%</b> vs <b>{_pct(rb)}%</b>，更凶的是 <b>{e(PLAT.get(cmp_["angrier"], cmp_["angrier"]))}</b></div></div>')
@@ -224,8 +264,9 @@ def build_body(m: dict, p: dict, o: Options, tall: bool) -> str:
         f'<div class="diag"><span class="t">{e(diag["name"])}</span><span class="d">{e(diag["desc"])}</span></div>'
         f'<div class="roast" data-fit-box>{e(roast)}</div></div>')
 
-    foot = (f'<div class="foot"><div class="repo">{e(o.repo_url)}</div>'
-            f'<div class="note">本地生成 · 数据未上传</div></div>')
+    foot = (f'<div class="foot"><div class="cta"><div class="q">你是哪一型？本地生成·数据不上传，评论区交代号 👇</div>'
+            f'<div class="repo">{e(o.repo_url)}</div></div>'
+            f'<div class="note">对 Claude Code / Codex 说<br>“生成我的 vibe 年报”</div></div>')
 
     parts = [head, persona_html, rhythm_html, mid_html, cmp_html, badges_html, final_html]
     parts.append(foot)
@@ -244,7 +285,7 @@ def build_html(m: dict, p: dict, o: Options, size: str) -> str:
         "{{title}}": e(f'{p["name"]} · vibe-wrapped'),
         "{{fonts}}": font_face_css(),
         "{{css}}": css,
-        "{{bg}}": e(p["bg"]), "{{accent}}": e(p["accent"]), "{{height}}": str(h),
+        "{{bg}}": e(p["bg"]), "{{bg2}}": e(p["bg2"]), "{{accent}}": e(p["accent"]), "{{height}}": str(h),
         "{{body}}": build_body(m, p, o, tall=h > 1500),
     }
     out = tpl
