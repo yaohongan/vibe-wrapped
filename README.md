@@ -3,6 +3,8 @@
 > 程序员版 Spotify Wrapped。读你本机的 **Claude Code** 和 **Codex** 会话日志，算出你这一年怎么跟 AI 写代码，给你一个人格类型和一张能直接发的海报。
 > Local-only Spotify-Wrapped for vibe coders. Reads your Claude Code + Codex logs, gives you a persona and a shareable poster. Nothing leaves your machine.
 
+<p align="center"><img src="docs/example-poster.png" width="420" alt="示例海报（合成数据）"></p>
+
 ## 你会得到什么
 
 | 文件 | 用途 |
