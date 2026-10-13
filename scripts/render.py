@@ -121,11 +121,15 @@ def heatmap_html(r: dict, window: dict) -> str:
         sd = end - timedelta(days=370)
     start = sd - timedelta(days=sd.weekday())
     vals = sorted(daily.values())
-    th = [vals[len(vals) * k // 4] for k in (1, 2, 3)] if vals else [0, 0, 0]
+    n = len(vals)
+    th = [vals[(n - 1) * k // 4] for k in (1, 2, 3)] if vals else [0, 0, 0]
+    flat = bool(vals) and vals[0] == vals[-1]
 
     def level(v: int) -> int:
         if v <= 0:
             return 0
+        if flat:
+            return 4
         return 1 if v <= th[0] else 2 if v <= th[1] else 3 if v <= th[2] else 4
 
     cells, d = [], start
