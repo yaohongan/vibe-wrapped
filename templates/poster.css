@@ -10,7 +10,7 @@
   --card:rgba(0,0,0,.045); --line:rgba(0,0,0,.12);
 }
 *{box-sizing:border-box;margin:0;padding:0}
-html,body{width:1080px;background:var(--bg)}
+html,body{width:1080px;height:var(--h,1440px);overflow:hidden;background:var(--bg)}
 body{font-family:var(--font);color:var(--fg);-webkit-font-smoothing:antialiased}
 .poster{
   position:relative;width:1080px;height:var(--h,1440px);overflow:hidden;
