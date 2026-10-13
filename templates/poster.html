@@ -24,12 +24,13 @@ function fit(){
       size -= 2; el.style.fontSize = size + 'px';
     }
   });
-  /* 内容超出画布时整体等比缩小（同时放宽宽高），保证页脚不被裁掉 */
+  /* 内容超出画布时整体等比缩小：用 transform 缩放，并按比例放宽画布宽高，保证页脚不被裁掉 */
   var p = document.getElementById('poster'), H = {{height}}, W = 1080, z = 1;
-  p.style.zoom = 1;
-  while (p.scrollHeight > H + 1 && z > 0.72) {
+  p.style.transformOrigin = '0 0';
+  while (p.scrollHeight > p.clientHeight + 1 && z > 0.72) {
     z = Math.round((z - 0.02) * 100) / 100;
-    p.style.zoom = z; p.style.width = (W / z) + 'px'; p.style.height = (H / z) + 'px';
+    p.style.width = (W / z) + 'px'; p.style.height = (H / z) + 'px';
+    p.style.transform = 'scale(' + z + ')';
   }
   document.documentElement.setAttribute('data-zoom', z);
   document.documentElement.setAttribute('data-ready','1');

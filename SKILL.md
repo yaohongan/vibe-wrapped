@@ -53,13 +53,13 @@ description: 生成 Vibe Check 人格报告。读取本机 Claude Code 和 Codex
    - 提醒：花费是按 API 标准价估算的，订阅用户实际支出不同。
    - 告诉用户还可以换时间维度，例如“生成我的 vibe 本月报告”。
 
-6. 昵称和头像（传播位，只问一次）
-   - 先运行 `python3 <skill>/scripts/wrapped.py doctor`，看“海报资料”一行：已有昵称/头像就不要再问。
-   - 没有的话，出完图后问一次：“想在海报左上角加昵称和头像吗？告诉我名字，再给一张头像图片路径就行（可只给昵称）。”
-   - 用户给了就运行 `python3 <skill>/scripts/wrapped.py profile --nickname "<名字>" --avatar <图片路径>`，然后重新 render。资料只保存在本机 `~/.vibe-wrapped/`，之后每次自动使用。
+6. 昵称（传播位，只问一次）
+   - 先运行 `python3 <skill>/scripts/wrapped.py doctor`，看“海报昵称”一行：已有就不要再问。
+   - 没有的话，出完图后问一次：“想在海报左上角加个昵称吗？告诉我名字就行，不要也可以。”
+   - 用户给了就运行 `python3 <skill>/scripts/wrapped.py profile --nickname "<名字>"`，然后重新 render。昵称只保存在本机 `~/.vibe-wrapped/`，之后每次自动使用。
    - 用户说不要，就不再问；要清除用 `profile --clear`。
 
 ## 禁止事项
-- 不要把日志内容、原话、路径、头像发到任何网络服务。
+- 不要把日志内容、原话、路径发到任何网络服务。
 - 不要读取认证文件（`auth.json`、`.credentials.json` 等），脚本也不会读。
 - 不要编造脚本没有给出的数字。

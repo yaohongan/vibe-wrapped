@@ -32,7 +32,7 @@
 | 生成我的 vibe **全部**报告 | 有日志以来 |
 | …**从 3 月 1 日到 3 月 31 日** | 自定义日期 |
 
-3 分钟内得到海报 PNG + 可复制的小红书 / X 文案。全程本地，不联网，不上传。第一次出图后 Agent 会问你一次**昵称和头像**，之后自动出现在海报左上角。
+3 分钟内得到海报 PNG + 可复制的小红书 / X 文案。全程本地，不联网，不上传。第一次出图后 Agent 会问你一次**昵称**（不要也行），之后自动出现在海报左上角。
 
 <details>
 <summary>给 Agent 的安装指引（人类可跳过）</summary>
@@ -78,7 +78,7 @@
 --platform claude_code|codex
 --show-projects             显示真实项目名/文件名（默认匿名：项目 A/B/C，*.tsx）
 --no-quotes | --show-quotes 原话：不显示 / 关闭脱敏（默认脱敏）
---nickname NAME --avatar PATH    海报左上角昵称/头像（或先 `wrapped.py profile` 保存，之后自动使用）
+--nickname NAME             海报左上角昵称（或先 `wrapped.py profile --nickname NAME` 保存，之后自动使用）
 --size 1080x1440|1080x1920
 --html-only                 只输出 HTML
 ```

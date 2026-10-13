@@ -30,7 +30,6 @@ NIGHT_HOURS = range(0, 5)
 class Options:
     quotes: str = "redact"          # redact | show | none
     nickname: Optional[str] = None
-    avatar: Optional[str] = None      # 头像图片路径
     repo_url: str = "github.com/yaohongan/vibe-wrapped"
     hide_projects: bool = False
     sizes: List[str] = field(default_factory=lambda: ["1080x1440", "1080x1920"])
@@ -109,20 +108,6 @@ def _pct(x: float) -> str:
     return f"{x * 100:.0f}"
 
 
-def avatar_html(o: Options) -> str:
-    """头像：有图用图（base64 内嵌），没图但有昵称就用首字母占位圆。"""
-    if o.avatar and os.path.isfile(o.avatar):
-        ext = os.path.splitext(o.avatar)[1].lower().lstrip(".")
-        mime = {"jpg": "jpeg", "jpeg": "jpeg", "png": "png", "webp": "webp", "gif": "gif"}.get(ext)
-        if mime:
-            with open(o.avatar, "rb") as fh:
-                b64 = base64.b64encode(fh.read()).decode()
-            return f'<img class="avatar" alt="" src="data:image/{mime};base64,{b64}">'
-    if o.nickname:
-        return f'<span class="avatar ph">{e(o.nickname.strip()[:1].upper())}</span>'
-    return ""
-
-
 def heatmap_html(r: dict, window: dict) -> str:
     """年度打卡热力图：每格一天，周一在上，按周从左到右。"""
     daily = r.get("daily") or {}
@@ -180,17 +165,14 @@ def build_body(m: dict, p: dict, o: Options, tall: bool) -> str:
     label = p.get("label") or m["window"].get("label") or ""
     plats = [PLAT.get(x, x) for x in m["platforms"]]
 
-    # 头部：头像 + 昵称（传播位）+ 平台
+    # 头部：昵称（传播位）+ 平台
     chips = "".join(f'<span class="chip">{e(x)}</span>' for x in plats)
-    ident = avatar_html(o)
     eyebrow = f'VIBE CHECK · {e(label)}'
-    if ident:
-        left = (f'<div class="row id">{ident}<div class="idtext">'
-                f'<div class="nick">@{e(o.nickname)}</div>' if o.nickname else
-                f'<div class="row id">{ident}<div class="idtext">')
-        left += f'<div class="eyebrow">{eyebrow}</div></div></div>'
+    if o.nickname:
+        left = (f'<div class="idtext"><div class="nick">@{e(o.nickname)}</div>'
+                f'<div class="eyebrow">{eyebrow}</div></div>')
     else:
-        left = f'<div><div class="eyebrow">{eyebrow}</div></div>'
+        left = f'<div class="idtext"><div class="eyebrow">{eyebrow}</div></div>'
     head = f'<div class="row head">{left}<div class="chips">{chips}</div></div>'
 
     # 人格卡

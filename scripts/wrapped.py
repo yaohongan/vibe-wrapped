@@ -130,7 +130,7 @@ def cmd_doctor(args) -> int:
     print("渲染器：", ", ".join(r) if r else "无（将只输出 HTML，用户自行截图）")
     prof = _profile()
     if prof:
-        print("海报资料：", prof.get("nickname") or "(无昵称)", "· 头像" if prof.get("avatar") else "· 无头像")
+        print("海报昵称：", prof.get("nickname") or "(无)")
     return 0 if found else 1
 
 
@@ -209,35 +209,23 @@ def cmd_roast(args) -> int:
     return 0
 
 
-# ───────────── profile（昵称 / 头像） ─────────────
+# ───────────── profile（昵称） ─────────────
 def cmd_profile(args) -> int:
-    prof = _profile()
     if args.clear:
-        prof = {}
         shutil.rmtree(PROFILE_DIR, ignore_errors=True)
-        print("已清除昵称和头像。")
+        print("已清除昵称。")
         return 0
-    os.makedirs(PROFILE_DIR, exist_ok=True)
+    prof = _profile()
+    prof.pop("avatar", None)          # 旧版本保存过的头像字段，不再使用
     if args.nickname is not None:
         prof["nickname"] = args.nickname.strip().lstrip("@")
-    if args.avatar:
-        src = os.path.expanduser(args.avatar)
-        if not os.path.isfile(src):
-            sys.exit(f"找不到头像文件：{src}")
-        ext = os.path.splitext(src)[1].lower()
-        if ext not in (".png", ".jpg", ".jpeg", ".webp", ".gif"):
-            sys.exit("头像请用 png / jpg / webp / gif")
-        if os.path.getsize(src) > 3 * 1024 * 1024:
-            sys.exit("头像文件超过 3MB，请先压缩一下")
-        for old in os.listdir(PROFILE_DIR):
-            if old.startswith("avatar."):
-                os.remove(os.path.join(PROFILE_DIR, old))
-        dst = os.path.join(PROFILE_DIR, "avatar" + ext)
-        shutil.copyfile(src, dst)
-        prof["avatar"] = dst
+    os.makedirs(PROFILE_DIR, exist_ok=True)
+    for old in os.listdir(PROFILE_DIR):
+        if old.startswith("avatar."):
+            os.remove(os.path.join(PROFILE_DIR, old))
     _dump(PROFILE_PATH, prof)
-    print("已保存：昵称", prof.get("nickname") or "(无)", "· 头像", "有" if prof.get("avatar") else "无")
-    print("资料只存在本机", PROFILE_DIR, "，下次出图自动使用。")
+    print("已保存昵称：", prof.get("nickname") or "(无)")
+    print("只存在本机", PROFILE_DIR, "，下次出图自动使用。")
     return 0
 
 
@@ -257,7 +245,6 @@ def cmd_render(args) -> int:
     opts = render.Options(
         quotes="none" if args.no_quotes else ("show" if args.show_quotes else "redact"),
         nickname=args.nickname if args.nickname is not None else prof.get("nickname"),
-        avatar=os.path.expanduser(args.avatar) if args.avatar else prof.get("avatar"),
         repo_url=REPO_URL,
         hide_projects=run.get("hide_projects", True),
         sizes=[args.size] if args.size else ["1080x1440", "1080x1920"],
@@ -296,8 +283,7 @@ def main(argv=None) -> int:
                             help="海报显示真实项目名/文件名（默认匿名为 项目 A/B、*.tsx）")
         if render_opts:
             sp.add_argument("--size", choices=["1080x1440", "1080x1920"])
-            sp.add_argument("--nickname", help="海报上显示的昵称（覆盖已保存的资料）")
-            sp.add_argument("--avatar", help="头像图片路径（覆盖已保存的资料）")
+            sp.add_argument("--nickname", help="海报上显示的昵称（覆盖已保存的）")
             g = sp.add_mutually_exclusive_group()
             g.add_argument("--show-quotes", action="store_true", help="关闭原话脱敏")
             g.add_argument("--no-quotes", action="store_true", help="海报不显示原话")
@@ -310,8 +296,8 @@ def main(argv=None) -> int:
     s.add_argument("--text", required=True); s.set_defaults(fn=cmd_roast)
     s = sub.add_parser("render"); common(s, render_opts=True); s.set_defaults(fn=cmd_render)
     s = sub.add_parser("all"); common(s, window=True, render_opts=True); s.set_defaults(fn=cmd_all)
-    s = sub.add_parser("profile", help="保存海报上的昵称和头像（只存本机）")
-    s.add_argument("--nickname"); s.add_argument("--avatar"); s.add_argument("--clear", action="store_true")
+    s = sub.add_parser("profile", help="保存海报上的昵称（只存本机）")
+    s.add_argument("--nickname"); s.add_argument("--clear", action="store_true")
     s.set_defaults(fn=cmd_profile)
     args = ap.parse_args(argv)
     return args.fn(args)

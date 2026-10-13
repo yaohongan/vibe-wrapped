@@ -139,11 +139,8 @@ body{font-family:var(--font);color:var(--fg);-webkit-font-smoothing:antialiased}
 .h3row .legend{font-size:18px;font-weight:400;letter-spacing:0;color:var(--fg3)}
 .share{margin:6px 0 6px}
 .legend i{width:12px;height:12px}
-/* 昵称 + 头像（传播位） */
-.id{gap:16px}
-.avatar{width:62px;height:62px;border-radius:50%;object-fit:cover;border:3px solid var(--accent);flex:none;display:block}
-.avatar.ph{display:flex;align-items:center;justify-content:center;background:var(--accent);color:#fff;font-weight:900;font-size:32px}
-.idtext .nick{font-size:30px;font-weight:800;line-height:1.1;color:var(--fg)}
+/* 昵称（传播位） */
+.idtext .nick{font-size:36px;font-weight:800;line-height:1.1;color:var(--fg)}
 .idtext .eyebrow{font-size:17px;margin-top:0;letter-spacing:.16em}
 /* ≤31 天：每日打卡柱 */
 .daybars{display:grid;grid-template-columns:repeat(var(--n),1fr);gap:6px;height:78px;margin-top:10px;align-items:end}
@@ -153,5 +150,4 @@ body{font-family:var(--font);color:var(--fg);-webkit-font-smoothing:antialiased}
 .db.we i.on{background:color-mix(in srgb,var(--accent) 60%,var(--fg))}
 .db i.off{background:var(--line)}
 .db span{font-family:var(--mono);font-size:16px;color:var(--fg3);height:18px;line-height:18px}
-.tall .avatar{width:84px;height:84px}
 .tall .daybars{height:140px}
