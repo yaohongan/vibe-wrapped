@@ -1,0 +1,29 @@
+# 脾气词典（英文）。整词匹配、忽略大小写。
+# 前缀 ^ 表示只在消息开头或单独成句时命中（避免误伤 "no problem"/"no need"）。
+wrong
+^no
+^nope
+stop
+undo
+revert
+again
+wtf
+wth
+broken
+that's not
+thats not
+i said	2
+i told you	2
+why did you
+why are you
+not what i
+still not
+doesn't work
+doesnt work
+not working
+useless
+terrible
+ridiculous
+what the hell
+for the love of
+how many times	2

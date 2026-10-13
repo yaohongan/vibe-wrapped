@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="zh-CN" class="{{theme}} {{shape}}">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=1080">
+<title>{{title}}</title>
+<style>
+{{fonts}}
+{{css}}
+:root{--bg:{{bg}};--accent:{{accent}};--h:{{height}}px}
+</style>
+</head>
+<body>
+<div class="poster" id="poster">
+{{body}}
+</div>
+<script>
+/* 文字溢出时自动缩字号（只在 data-fit 元素上生效） */
+document.fonts && document.fonts.ready.then(fit); window.addEventListener('load', fit);
+function fit(){
+  document.querySelectorAll('[data-fit]').forEach(function(el){
+    var size = parseFloat(getComputedStyle(el).fontSize), min = size * 0.5, n = 0;
+    while (el.scrollWidth > el.clientWidth + 1 && size > min && n++ < 80) {
+      size -= 2; el.style.fontSize = size + 'px';
+    }
+  });
+  document.documentElement.setAttribute('data-ready','1');
+}
+</script>
+</body>
+</html>
