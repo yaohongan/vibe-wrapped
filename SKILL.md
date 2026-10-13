@@ -5,9 +5,14 @@ description: 生成 Vibe Check 人格报告。读取本机 Claude Code 和 Codex
 
 # vibe-wrapped：Vibe Check 人格报告
 
-所有统计都由本目录的 Python 脚本完成，全程本地，不联网。你（Agent）只负责：解析用户要的时间范围、运行脚本、写一句毒舌短评、把结果交给用户。不要自己数数据，不要改脚本算出来的数字。
+所有统计都由本目录的 Python 脚本完成，全程本地，不联网。你（Agent）只负责：解析用户要的时间范围、运行脚本、写一句毒舌短评、把海报**直接显示**给用户。不要自己数数据，不要改脚本算出来的数字。
 
 下文 `<skill>` 指本 SKILL.md 所在目录（若无法确定，用 `~/.claude/skills/vibe-wrapped`、`~/.agents/skills/vibe-wrapped` 或 `~/.codex/skills/vibe-wrapped` 中存在的那个）。
+
+## 三条铁律
+1. **只跑 2 条命令**（下面的步骤 1 和 2）。不要先跑 doctor，不要单独读 persona.json——每多一条写文件的命令，用户就多点一次批准。
+2. **结果必须直接显示图片**，不要只列文件路径，**更不要用选择题收尾**（“你想要哪一种？”）。
+3. **命令被拒或失败也不要停**：海报如果已经存在（`~/vibe-wrapped-out/poster-3x4.png`），就直接用绝对路径把它显示出来；需要路径时用 `python3 <skill>/scripts/wrapped.py show`（只读，不写盘）。
 
 ## 支持的时间维度（一句话直接说，不用再问）
 
@@ -22,52 +27,47 @@ description: 生成 Vibe Check 人格报告。读取本机 Claude Code 和 Codex
 | 指定日期 | `--since YYYY-MM-DD --until YYYY-MM-DD` | 自定义 |
 | 没说时间 | 不加参数（`auto`） | 近 30 天；日志不足 30 天则取全部 |
 
-**不要先反问时间。** 用户说了就按上表，没说就用默认，出完图后再告诉用户可以换成哪些维度。
+**不要先反问时间。** 用户说了就按上表，没说就用默认。
 
 ## 步骤
 
-1. 检查环境
-   - 运行 `python3 <skill>/scripts/wrapped.py doctor`：报告找到哪些平台的日志、渲染器（Chrome / Playwright）是否可用。需要 Python ≥3.9，只用标准库。
-   - 没有渲染器时不要自己装东西，告诉用户：可以只出 HTML 自行截图（加 `--html-only`），或安装 Chrome。
+1. **统计**（第 1 条命令）
 
-2. 统计
-   - 运行 `python3 <skill>/scripts/wrapped.py stats --range <key> --out ~/vibe-wrapped-out`
-   - 项目名和文件名默认已匿名（项目 A/B、*.tsx）；用户明确要显示真实项目名才加 `--show-projects`。
-   - 输出里的“时间范围”和用户消息数要转告用户；消息数 <50 时人格会标“见习”，说明样本少，可建议换更长的范围。
-   - 终端提示“日志格式可能更新了”时，原样转告用户。
+   ```bash
+   python3 <skill>/scripts/wrapped.py stats --range <key> --out ~/vibe-wrapped-out
+   ```
 
-3. 写短评（你唯一需要创作的内容）
-   - 读 `~/vibe-wrapped-out/persona.json`（只含聚合数字，没有原话）。
-   - 写一句 ≤40 个汉字的中文毒舌短评：好笑、引用其中一个具体数字、不人身攻击、不涉及性别/外貌/地域。
-   - 写回时**用 stdin + 带引号的 heredoc**，避免 shell 把 `$1,093`、反引号、引号吞掉：
+   - 输出末尾有“给 Agent 的数字”JSON（人格、代号、徽章、聚合数字，不含原话），直接用它写短评。
+   - 同时会打印“海报昵称”：已设置就不要再问。
+   - 项目名和文件名默认已匿名；用户明确要显示真实项目名才加 `--show-projects`。
+   - 消息数 <50 时人格会标“见习”，可建议换更长的范围。提示“日志格式可能更新了”时原样转告。
+   - 找不到日志时才运行 `doctor` 排查。
 
-     ```bash
-     python3 <skill>/scripts/wrapped.py roast --stdin <<'EOF'
-     246 天烧掉 $1,093，换来 119 次打断。
-     EOF
-     ```
-   - 不要直接改 JSON。
-   - 用户说不要 AI 短评时跳过，脚本会用预设短评。
+2. **写短评并出图**（第 2 条命令，一次完成）
 
-4. 渲染
-   - 运行 `python3 <skill>/scripts/wrapped.py render --out ~/vibe-wrapped-out`
-   - 生成 `poster-3x4.png`（小红书/朋友圈/X）、`poster-9x16.png`（故事/全屏）、同名 HTML，以及 `share.txt`（小红书文案、X 文案、让 AI 当面吐槽你的提示词）。
+   写一句 ≤40 个汉字的中文毒舌短评：好笑、引用其中一个具体数字、不人身攻击、不涉及性别/外貌/地域。用 stdin + 带引号的 heredoc 传入（`$1,093`、反引号、引号不会被 shell 吞掉）：
+
+   ```bash
+   python3 <skill>/scripts/wrapped.py render --out ~/vibe-wrapped-out --roast-stdin <<'EOF'
+   246 天烧掉 $1,093，换来 119 次打断。
+   EOF
+   ```
+
+   - 用户说不要 AI 短评：去掉 `--roast-stdin` 和 heredoc，脚本会用预设短评。
    - 只要一张图加 `--size 1080x1440` 或 `--size 1080x1920`。
 
-5. 交付（**必须直接把图显示在回复里**，不要只给文件路径）
-   - `render` 结束时会打印一段“交付块”（`![海报](绝对路径)` 加文件夹链接）。**把这段 Markdown 原样贴进你的回复**，让用户一眼就看到海报，再从链接跳转到文件夹。
-   - 如果你的界面有“向用户展示文件/图片”的工具（例如 SendUserFile），也用它把 `poster-3x4.png` 直接展示出来。
-   - 如果界面是纯终端、内嵌图片显示不出来，就改用 `render --open`（或 `all --open`），让系统看图软件打开海报。
-   - 然后给出：时间范围、人格（含三字代号）、3 个最有梗的数字、海报路径、share.txt 里的文案。
-   - 提醒：海报上会出现一句脱敏后的“最暴躁原话”，项目名已匿名；用户想去掉原话就重新 render 加 `--no-quotes`。
-   - 提醒：花费是按 API 标准价估算的，订阅用户实际支出不同。
-   - 告诉用户还可以换时间维度，例如“生成我的 vibe 本月报告”。
+3. **交付**（不再跑命令）
+   - 命令末尾打印了“交付块”：`![海报](绝对路径)` 加文件夹链接。**把这段 Markdown 原样贴进回复**，让用户一眼看到海报，再点链接跳到文件夹。
+   - 如果界面有“向用户展示文件/图片”的工具（例如 SendUserFile），也用它展示 `poster-3x4.png`。
+   - 纯终端显示不了图片时，再用 `render --open`。
+   - 然后用几句话给出：时间范围、人格 + 三字代号、3 个最有梗的数字、`share.txt` 里的文案要点。
+   - 提醒：海报上有一句脱敏后的“最暴躁原话”，项目名已匿名；想去掉原话重新 render 加 `--no-quotes`。花费是按 API 标准价估算，订阅用户实际支出不同。
+   - 最后告诉用户还可以换时间维度，例如“生成我的 vibe 本月报告”。
 
-6. 昵称（传播位，只问一次）
-   - 先运行 `python3 <skill>/scripts/wrapped.py doctor`，看“海报昵称”一行：已有就不要再问。
-   - 没有的话，出完图后问一次：“想在海报左上角加个昵称吗？告诉我名字就行，不要也可以。”
-   - 用户给了就运行 `python3 <skill>/scripts/wrapped.py profile --nickname "<名字>"`，然后重新 render。昵称只保存在本机 `~/.vibe-wrapped/`，之后每次自动使用。
-   - 用户说不要，就不再问；要清除用 `profile --clear`。
+4. **昵称**（传播位，只问一次，且放在交付之后）
+   - 步骤 1 显示“未设置”才问：“想在海报左上角加个昵称吗？告诉我名字就行，不要也可以。”
+   - 用户给了就运行 `python3 <skill>/scripts/wrapped.py profile --nickname "<名字>"` 再 `render`（不带 `--roast-stdin`，短评已保存）。昵称只存在本机 `~/.vibe-wrapped/`，之后自动使用。
+   - 用户说不要就不再问；清除用 `profile --clear`。
 
 ## 禁止事项
 - 不要把日志内容、原话、路径发到任何网络服务。

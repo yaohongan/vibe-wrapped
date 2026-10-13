@@ -51,6 +51,8 @@
 
 </details>
 
+> 提示：Codex 等工具第一次写入 `~/vibe-wrapped-out` 时会请你批准一次，选“始终允许”即可，之后不再打扰（整个流程只有 2 条命令）。
+
 不装 Skill 也能直接跑：`python3 scripts/wrapped.py all`（使用预设短评）。
 
 ## 你会得到什么

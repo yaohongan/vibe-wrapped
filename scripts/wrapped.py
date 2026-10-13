@@ -186,6 +186,15 @@ def cmd_stats(args) -> int:
     print(f"时间范围：{label}")
     print(f"人格：{p['code']}｜{p['name']}  N={p['axes']['N']} G={p['axes']['G']} L={p['axes']['L']}")
     print(f"用户消息 {m['user_msgs']} 条；输出目录：{out}")
+    nick = _profile().get("nickname")
+    print(f"海报昵称：{nick if nick else '未设置（出图后问用户一次要不要加）'}")
+    print("===== 给 Agent 的数字（写短评用，只含聚合数字，不含原话）=====")
+    print(json.dumps({
+        "label": label, "persona": p["name"], "code": p["code"], "tagline": p["tagline"],
+        "diagnosis": p["diagnosis"]["name"], "badges": [b["title"] for b in p["badges"]],
+        "numbers": p["numbers"], "fallback_roast": p["roast_fallback"],
+    }, ensure_ascii=False, indent=1))
+    print("===== 以上 =====")
     if m["user_msgs"] == 0:
         print("  这个时间范围内没有用户消息，换个更长的范围试试（如 --range all）。")
     elif m["user_msgs"] < persona_mod.MIN_SAMPLE:
@@ -243,6 +252,12 @@ def cmd_render(args) -> int:
     run = {}
     if os.path.exists(os.path.join(out, "run.json")):
         run = _load(os.path.join(out, "run.json"))
+    if args.roast_stdin:
+        text = " ".join(sys.stdin.read().split())
+        if text:
+            p["roast"] = text[:39] + "…" if len(text) > 40 else text
+            _dump(os.path.join(out, "persona.json"), p)
+            print("已写入短评：", p["roast"])
     prof = _profile()
     opts = render.Options(
         quotes="none" if args.no_quotes else ("show" if args.show_quotes else "redact"),
@@ -295,6 +310,23 @@ def _open_path(path: str) -> None:
         pass
 
 
+def cmd_show(args) -> int:
+    """只读：把已经生成好的海报打印成可直接贴进回复的交付块（不重新统计、不写文件）。"""
+    out = os.path.abspath(os.path.expanduser(args.out or DEFAULT_OUT))
+    files = [os.path.join(out, n) for n in ("poster-3x4.png", "poster-9x16.png")
+             if os.path.exists(os.path.join(out, n))]
+    if not files:
+        print("还没有生成过海报：先运行 stats，再 render。")
+        return 1
+    try:
+        p = _load(os.path.join(out, "persona.json"))
+        print(f"{p.get('label', '')}｜{p['code']}｜{p['name']}")
+    except (OSError, ValueError, KeyError):
+        pass
+    _print_delivery(out, files)
+    return 0
+
+
 def cmd_all(args) -> int:
     rc = cmd_stats(args)
     return rc or cmd_render(args)
@@ -325,6 +357,8 @@ def main(argv=None) -> int:
             g.add_argument("--show-quotes", action="store_true", help="关闭原话脱敏")
             g.add_argument("--no-quotes", action="store_true", help="海报不显示原话")
             sp.add_argument("--html-only", action="store_true", help="只输出 HTML，不截图")
+            sp.add_argument("--roast-stdin", action="store_true",
+                            help="从 stdin 读入 AI 短评并直接出图（用带引号的 heredoc，$ 和反引号不会被吞）")
             sp.add_argument("--open", action="store_true",
                             help="出图后用系统看图软件打开第一张海报（Agent 界面不能内嵌显示图片时使用）")
 
@@ -338,6 +372,8 @@ def main(argv=None) -> int:
     s.set_defaults(fn=cmd_roast)
     s = sub.add_parser("render"); common(s, render_opts=True); s.set_defaults(fn=cmd_render)
     s = sub.add_parser("all"); common(s, window=True, render_opts=True); s.set_defaults(fn=cmd_all)
+    s = sub.add_parser("show", help="只读：打印已有海报的交付块（图片 + 文件夹链接）")
+    s.add_argument("--out", default=DEFAULT_OUT); s.set_defaults(fn=cmd_show)
     s = sub.add_parser("profile", help="保存海报上的昵称（只存本机）")
     s.add_argument("--nickname"); s.add_argument("--clear", action="store_true")
     s.set_defaults(fn=cmd_profile)
